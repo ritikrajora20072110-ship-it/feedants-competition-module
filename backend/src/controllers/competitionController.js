@@ -133,6 +133,45 @@ class CompetitionController {
       next(err);
     }
   }
+
+  /**
+   * Join competition waitlist
+   */
+  async joinWaitlist(req, res, next) {
+    try {
+      const { id } = req.params;
+      let { userId } = req.body;
+      if (!userId) {
+        const demoUser = await User.findOne();
+        userId = demoUser ? demoUser._id : null;
+      }
+
+      const result = await competitionService.joinWaitlist({ competitionId: id, userId });
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Live concurrency simulation endpoint
+   */
+  async simulateConcurrency(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { count = 5 } = req.body;
+      const result = await competitionService.simulateConcurrentRegistrations(id, count);
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new CompetitionController();

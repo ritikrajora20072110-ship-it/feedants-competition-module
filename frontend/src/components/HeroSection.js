@@ -17,7 +17,12 @@ export const HeroSection = ({ competition, userState, currentLang, t }) => {
           {title}
         </Text>
 
-        {isRegistered ? (
+        {userState?.hasSubmitted ? (
+          <View style={styles.registeredBadge}>
+            <Ionicons name="checkmark-done-circle" size={14} color="#0D9488" />
+            <Text style={styles.registeredBadgeText}>{isHi ? 'प्रविष्टि सबमिट' : 'Submitted'}</Text>
+          </View>
+        ) : isRegistered ? (
           <View style={styles.registeredBadge}>
             <Ionicons name="checkmark-circle" size={14} color="#0D9488" />
             <Text style={styles.registeredBadgeText}>{t.registeredBadge}</Text>

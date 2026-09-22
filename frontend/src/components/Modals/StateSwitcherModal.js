@@ -81,7 +81,62 @@ export const StateSwitcherModal = ({
               </View>
               <View style={styles.scenarioText}>
                 <Text style={styles.scenarioTitle}>3. Sold Out / Max Capacity (0 Spots Left)</Text>
-                <Text style={styles.scenarioDesc}>Shows 'Sold Out' status and disables registration</Text>
+                <Text style={styles.scenarioDesc}>Shows 'Sold Out' status and enables 'Join Waitlist' CTA</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Scenario 4: Submitted Entry */}
+            <TouchableOpacity
+              style={styles.scenarioCard}
+              onPress={() => {
+                onSelectScenario('SUBMITTED');
+                onClose();
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#E6F6F6' }]}>
+                <Ionicons name="film" size={18} color="#086972" />
+              </View>
+              <View style={styles.scenarioText}>
+                <Text style={styles.scenarioTitle}>4. Entry Submitted (Under Review)</Text>
+                <Text style={styles.scenarioDesc}>Shows 'View Your Submission' & entry details</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Scenario 5: Judging in Progress */}
+            <TouchableOpacity
+              style={styles.scenarioCard}
+              onPress={() => {
+                onSelectScenario('JUDGING');
+                onClose();
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
+                <Ionicons name="hourglass" size={18} color="#D97706" />
+              </View>
+              <View style={styles.scenarioText}>
+                <Text style={styles.scenarioTitle}>5. Judging in Progress (Deadline Passed)</Text>
+                <Text style={styles.scenarioDesc}>Shows countdown to result announcement on 1 Sept</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Live Concurrency Simulation */}
+            <Text style={styles.sectionHeader}>Concurrency & Multi-User Testing</Text>
+            <TouchableOpacity
+              style={[styles.scenarioCard, { borderColor: '#086972', backgroundColor: '#F0FDFA' }]}
+              onPress={() => {
+                onSelectScenario('SIMULATE_CONCURRENCY');
+                onClose();
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#086972' }]}>
+                <Ionicons name="flash" size={18} color="#FFFFFF" />
+              </View>
+              <View style={styles.scenarioText}>
+                <Text style={[styles.scenarioTitle, { color: '#086972' }]}>⚡ Fire 5 Concurrent Spot Bookings</Text>
+                <Text style={styles.scenarioDesc}>Simulates 5 parallel users booking at the same second to test atomic consistency</Text>
               </View>
             </TouchableOpacity>
 

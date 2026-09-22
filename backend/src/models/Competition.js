@@ -149,6 +149,12 @@ const CompetitionSchema = new mongoose.Schema(
       type: String,
       default: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     },
+    waitlist: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        joinedAt: { type: Date, default: Date.now },
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,
@@ -176,45 +182,54 @@ CompetitionSchema.methods.calculateDynamicState = function (now = new Date()) {
   let countdownLabel = 'Registration closes in';
   let canRegister = false;
   let canSubmit = false;
+  let statusMessage = 'Registration is open';
 
   if (now < registrationStart) {
     lifecycle = 'UPCOMING';
     countdownTarget = registrationStart;
     countdownLabel = 'Registration opens in';
     canRegister = false;
+    statusMessage = 'Competition is upcoming. Registration opens soon.';
   } else if (now <= registrationEnd && !isFull) {
     lifecycle = 'REGISTRATION_OPEN';
     countdownTarget = registrationEnd;
     countdownLabel = 'Registration closes in';
     canRegister = true;
+    const remaining = Math.max(0, this.maxParticipants - this.currentParticipants);
+    statusMessage = `Registration open. Only ${remaining} spots remaining!`;
   } else if (now <= registrationEnd && isFull) {
     lifecycle = 'REGISTRATION_FULL';
     countdownTarget = submissionStart;
     countdownLabel = 'Submission starts in';
     canRegister = false;
+    statusMessage = 'All spots booked. Waitlist is currently open.';
   } else if (now < submissionStart) {
     lifecycle = 'REGISTRATION_CLOSED';
     countdownTarget = submissionStart;
     countdownLabel = 'Submission starts in';
     canRegister = false;
+    statusMessage = 'Registration has closed. Submission window will open shortly.';
   } else if (now <= submissionEnd) {
     lifecycle = 'SUBMISSION_OPEN';
     countdownTarget = submissionEnd;
     countdownLabel = 'Submission closes in';
     canRegister = false;
     canSubmit = true;
+    statusMessage = 'Submission window active. Registered participants can upload entries.';
   } else if (now < resultDate) {
     lifecycle = 'JUDGING';
     countdownTarget = resultDate;
     countdownLabel = 'Results announce in';
     canRegister = false;
     canSubmit = false;
+    statusMessage = 'Judging in progress. Final scores and winner leaderboard being compiled.';
   } else {
     lifecycle = 'COMPLETED';
     countdownTarget = null;
     countdownLabel = 'Competition Ended';
     canRegister = false;
     canSubmit = false;
+    statusMessage = 'Competition completed. Winner certificates and cash prizes distributed.';
   }
 
   return {
@@ -225,6 +240,9 @@ CompetitionSchema.methods.calculateDynamicState = function (now = new Date()) {
     countdownLabel,
     canRegister,
     canSubmit,
+    statusMessage,
+    serverTime: now,
+    waitlistCount: this.waitlist ? this.waitlist.length : 0,
   };
 };
 

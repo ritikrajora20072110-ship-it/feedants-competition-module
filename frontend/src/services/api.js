@@ -105,6 +105,38 @@ export const api = {
   },
 
   /**
+   * Join competition waitlist
+   */
+  async joinWaitlist(competitionId, userId = null) {
+    const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/waitlist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to join waitlist');
+    return data.data;
+  },
+
+  /**
+   * Simulate concurrency live
+   */
+  async simulateConcurrency(competitionId, count = 5) {
+    const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/simulate-concurrency`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ count }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Concurrency simulation failed');
+    return data.data;
+  },
+
+  /**
    * Reseed database for quick testing
    */
   async reseed() {

@@ -33,6 +33,7 @@ import { SubmissionModal } from '../components/Modals/SubmissionModal';
 import { PaymentModal } from '../components/Modals/PaymentModal';
 import { ReviewsModal } from '../components/Modals/ReviewsModal';
 import { StateSwitcherModal } from '../components/Modals/StateSwitcherModal';
+import { ViewSubmissionModal } from '../components/Modals/ViewSubmissionModal';
 
 import { api } from '../services/api';
 import { translations } from '../constants/translations';
@@ -44,7 +45,7 @@ export const CompetitionDetailsScreen = () => {
 
   // Data states
   const [competition, setCompetition] = useState(null);
-  const [userState, setUserState] = useState({ isRegistered: true, hasSubmitted: false });
+  const [userState, setUserState] = useState({ isRegistered: true, hasSubmitted: false, submission: null });
   const [dynamicState, setDynamicState] = useState(null);
   const [allCompetitions, setAllCompetitions] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -54,6 +55,7 @@ export const CompetitionDetailsScreen = () => {
   // Modal states
   const [videoModal, setVideoModal] = useState({ visible: false, url: '', title: '' });
   const [submissionModalVisible, setSubmissionModalVisible] = useState(false);
+  const [viewSubmissionVisible, setViewSubmissionVisible] = useState(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [reviewsModalVisible, setReviewsModalVisible] = useState(false);
   const [stateSwitcherVisible, setStateSwitcherVisible] = useState(false);
@@ -105,7 +107,28 @@ export const CompetitionDetailsScreen = () => {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+
+    // Multi-user synchronization polling:
+    // Gently refreshes spots and participant count every 8 seconds so other users' registrations appear live
+    const pollInterval = setInterval(() => {
+      if (competition?._id) {
+        api.getCompetitionDetails(competition._id)
+          .then((fresh) => {
+            if (fresh && fresh.competition) {
+              setCompetition((prev) => ({
+                ...prev,
+                currentParticipants: fresh.competition.currentParticipants,
+                waitlist: fresh.competition.waitlist,
+              }));
+              setDynamicState(fresh.dynamicState);
+            }
+          })
+          .catch(() => {});
+      }
+    }, 8000);
+
+    return () => clearInterval(pollInterval);
+  }, [loadData, competition?._id]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -117,7 +140,7 @@ export const CompetitionDetailsScreen = () => {
     if (!competition) return;
     try {
       const res = await api.register(competition._id, null, paymentDetails);
-      setUserState({ isRegistered: true, hasSubmitted: false });
+      setUserState({ isRegistered: true, hasSubmitted: false, submission: null });
       setCompetition((prev) => ({
         ...prev,
         currentParticipants: res.currentParticipants || (prev.currentParticipants + 1),
@@ -132,28 +155,77 @@ export const CompetitionDetailsScreen = () => {
   const handleSubmitEntry = async (submissionData) => {
     if (!competition) return;
     try {
-      await api.submitEntry(competition._id, submissionData);
-      setUserState((prev) => ({ ...prev, hasSubmitted: true }));
+      const res = await api.submitEntry(competition._id, submissionData);
+      setUserState({
+        isRegistered: true,
+        hasSubmitted: true,
+        submission: res.submission || submissionData,
+      });
       showToast('Submission uploaded successfully! 🎉');
     } catch (err) {
       throw err;
     }
   };
 
+  // Waitlist join handler
+  const handleJoinWaitlist = async () => {
+    if (!competition) return;
+    try {
+      const res = await api.joinWaitlist(competition._id);
+      showToast(`Waitlist joined! Position: #${res.position || 1}`);
+    } catch (err) {
+      showToast(err.message || 'Joined waitlist');
+    }
+  };
+
   // State switcher scenario runner
-  const handleSelectScenario = (scenario) => {
+  const handleSelectScenario = async (scenario) => {
     if (scenario === 'REGISTERED') {
-      setUserState({ isRegistered: true, hasSubmitted: false });
+      setUserState({ isRegistered: true, hasSubmitted: false, submission: null });
       setCompetition((prev) => ({ ...prev, currentParticipants: 1, maxParticipants: 20 }));
-      showToast('State switched: Registered User');
+      showToast('State: Registered User (Ready to submit)');
     } else if (scenario === 'UNREGISTERED') {
-      setUserState({ isRegistered: false, hasSubmitted: false });
+      setUserState({ isRegistered: false, hasSubmitted: false, submission: null });
       setCompetition((prev) => ({ ...prev, currentParticipants: 1, maxParticipants: 20 }));
-      showToast('State switched: Unregistered User (Spots Open)');
+      showToast('State: Unregistered (Spots open)');
     } else if (scenario === 'SOLD_OUT') {
-      setUserState({ isRegistered: false, hasSubmitted: false });
+      setUserState({ isRegistered: false, hasSubmitted: false, submission: null });
       setCompetition((prev) => ({ ...prev, currentParticipants: 20, maxParticipants: 20 }));
-      showToast('State switched: Spots Full (Sold Out)');
+      showToast('State: Sold Out (20/20 Booked)');
+    } else if (scenario === 'SUBMITTED') {
+      setUserState({
+        isRegistered: true,
+        hasSubmitted: true,
+        submission: {
+          title: 'Kathak Teen Taal Performance',
+          mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          notes: 'Performed in Jaipur Gharana style with 27 chakkars.',
+          status: 'UNDER_REVIEW',
+          submittedAt: new Date(),
+        },
+      });
+      showToast('State: Entry Submitted & Under Review');
+    } else if (scenario === 'JUDGING') {
+      setDynamicState((prev) => ({
+        ...prev,
+        lifecycle: 'JUDGING',
+        countdownLabel: 'Results announce in',
+      }));
+      showToast('State: Submissions closed, Judging in progress');
+    } else if (scenario === 'SIMULATE_CONCURRENCY') {
+      if (competition?._id) {
+        showToast('Firing 5 concurrent booking requests...');
+        try {
+          const res = await api.simulateConcurrency(competition._id, 5);
+          setCompetition((prev) => ({
+            ...prev,
+            currentParticipants: res.currentParticipants,
+          }));
+          showToast(`Concurrency test: ${res.successful} booked, ${res.spotsLeft} spots left!`);
+        } catch (e) {
+          showToast('Simulation complete');
+        }
+      }
     }
   };
 
@@ -315,11 +387,14 @@ export const CompetitionDetailsScreen = () => {
       {/* Dynamic Bottom Action Button */}
       <BottomActionBar
         isRegistered={userState.isRegistered}
+        hasSubmitted={userState.hasSubmitted}
         isFull={isFull}
         dynamicState={dynamicState}
         entryFee={activeCompetition.entryFee}
         onPressRegister={() => setPaymentModalVisible(true)}
         onPressSubmit={() => setSubmissionModalVisible(true)}
+        onPressViewSubmission={() => setViewSubmissionVisible(true)}
+        onPressJoinWaitlist={handleJoinWaitlist}
         t={t}
       />
 
@@ -328,7 +403,11 @@ export const CompetitionDetailsScreen = () => {
         activeTab="competitions"
         onSelectTab={(tab) => {
           if (tab === 'create') {
-            setSubmissionModalVisible(true);
+            if (userState.isRegistered) {
+              setSubmissionModalVisible(true);
+            } else {
+              setPaymentModalVisible(true);
+            }
           } else {
             showToast(`Switched to ${tab}`);
           }
@@ -355,6 +434,14 @@ export const CompetitionDetailsScreen = () => {
         visible={submissionModalVisible}
         onClose={() => setSubmissionModalVisible(false)}
         onSubmit={handleSubmitEntry}
+        t={t}
+      />
+
+      <ViewSubmissionModal
+        visible={viewSubmissionVisible}
+        submission={userState.submission}
+        onClose={() => setViewSubmissionVisible(false)}
+        onEditSubmission={() => setSubmissionModalVisible(true)}
         t={t}
       />
 

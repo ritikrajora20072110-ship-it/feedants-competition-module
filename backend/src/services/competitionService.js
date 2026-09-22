@@ -190,6 +190,94 @@ class CompetitionService {
   }
 
   /**
+   * Join competition waitlist when capacity is reached
+   */
+  async joinWaitlist({ competitionId, userId }) {
+    const user = await User.findById(userId);
+    if (!user) {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const competition = await Competition.findById(competitionId);
+    if (!competition) {
+      const error = new Error('Competition not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if user is already on the waitlist
+    const alreadyWaitlisted = competition.waitlist.some(
+      (w) => w.userId.toString() === userId.toString()
+    );
+
+    if (alreadyWaitlisted) {
+      return {
+        message: 'You are already on the waitlist',
+        position: competition.waitlist.findIndex((w) => w.userId.toString() === userId.toString()) + 1,
+      };
+    }
+
+    competition.waitlist.push({ userId, joinedAt: new Date() });
+    await competition.save();
+
+    return {
+      message: 'Successfully joined waitlist',
+      position: competition.waitlist.length,
+      waitlistCount: competition.waitlist.length,
+    };
+  }
+
+  /**
+   * Simulate multiple concurrent registration attempts
+   * Used for demonstrating data consistency and race-condition prevention live
+   */
+  async simulateConcurrentRegistrations(competitionId, requestedSpots = 5) {
+    const comp = await Competition.findById(competitionId);
+    if (!comp) {
+      const error = new Error('Competition not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Generate simulated concurrent users
+    const simulatedUsers = await Promise.all(
+      Array.from({ length: requestedSpots }).map((_, i) =>
+        User.create({
+          name: `Concurrent Dancer ${Math.floor(Math.random() * 1000)}`,
+          email: `concurrent_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}@test.com`,
+        })
+      )
+    );
+
+    // Fire all registrations concurrently
+    const results = await Promise.allSettled(
+      simulatedUsers.map((user) =>
+        this.registerUser({
+          competitionId,
+          userId: user._id,
+          paymentId: `sim_pay_${Date.now()}_${user._id}`,
+        })
+      )
+    );
+
+    const successful = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
+
+    const finalComp = await Competition.findById(competitionId);
+
+    return {
+      attempted: requestedSpots,
+      successful,
+      failed,
+      currentParticipants: finalComp.currentParticipants,
+      maxParticipants: finalComp.maxParticipants,
+      spotsLeft: Math.max(0, finalComp.maxParticipants - finalComp.currentParticipants),
+    };
+  }
+
+  /**
    * Get all submissions for a competition
    */
   async getSubmissions(competitionId) {

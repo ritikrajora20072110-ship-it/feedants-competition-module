@@ -17,4 +17,10 @@ router.post('/:id/submit', (req, res, next) => competitionController.submitEntry
 // Get competition submissions
 router.get('/:id/submissions', (req, res, next) => competitionController.getSubmissions(req, res, next));
 
+// Join waitlist when competition is full
+router.post('/:id/waitlist', (req, res, next) => competitionController.joinWaitlist(req, res, next));
+
+// Simulate concurrent bookings (Live consistency check)
+router.post('/:id/simulate-concurrency', (req, res, next) => competitionController.simulateConcurrency(req, res, next));
+
 module.exports = router;
