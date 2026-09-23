@@ -3,6 +3,9 @@ import { Platform } from 'react-native';
 // For mobile emulator / web / physical device support:
 // Android Emulator uses 10.0.2.2, iOS Simulator & Web use localhost
 const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5001/api';
   }

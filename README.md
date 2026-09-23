@@ -181,6 +181,61 @@ npm start
 
 ---
 
+## ⚙️ Required Environment Variables & Configuration
+
+### Backend (`/backend/.env`)
+
+Create a `.env` file in the `backend/` directory (or copy from `.env.example`):
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+| Variable | Required | Default Value | Description |
+|---|---|---|---|
+| `PORT` | Optional | `5001` | Local port number the Express server listens on |
+| `MONGODB_URI` | **Required** | `mongodb://127.0.0.1:27017/feedants_db` | Connection string for local MongoDB or MongoDB Atlas cluster |
+| `NODE_ENV` | Optional | `development` | Runtime environment mode (`development`, `production`, `test`) |
+| `RAZORPAY_KEY_ID` | Optional | *(Simulated in demo)* | Razorpay API Key ID for live transaction processing |
+| `RAZORPAY_KEY_SECRET` | Optional | *(Simulated in demo)* | Razorpay Secret Key for HMAC signature verification |
+
+### Frontend (`/frontend/.env`)
+
+Create a `.env` file in the `frontend/` directory (or copy from `.env.example`):
+
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+| Variable | Required | Default Value | Description |
+|---|---|---|---|
+| `EXPO_PUBLIC_API_URL` | Optional | `http://localhost:5001/api` | Base URL for backend REST API. Auto-adjusts for Android emulator (`10.0.2.2:5001`) if omitted |
+
+---
+
+## 📦 What Goes to GitHub vs. Given Differently
+
+To adhere to security best practices and technical submission guidelines:
+
+### ✅ Included in GitHub Repository
+1. **Complete Source Code**:
+   - Backend Express API, Mongoose schemas, atomic concurrency services, and seed scripts.
+   - Frontend React Native / Expo application, custom modular components, and i18n localization dictionaries.
+2. **Configuration Templates**:
+   - `backend/.env.example` & `frontend/.env.example` showing all environment keys and format.
+3. **Automated Test Suites**:
+   - Jest integration tests & concurrency race condition stress tests.
+4. **Documentation**:
+   - Architecture diagrams, API specs, assumptions, and production scalability notes.
+
+### 🔒 Given Differently (Not in GitHub)
+1. **Live Secret `.env` Files**:
+   - Never commit raw `.env` files containing production MongoDB Atlas credentials, database passwords, or private payment gateway secrets (properly excluded via `.gitignore`).
+2. **Screen Recording Demo Video**:
+   - As requested in the assignment submission requirements, the screen recording video is submitted as an external link (Google Drive / Loom / YouTube Unlisted) rather than committing large binary media to git history.
+3. **Local Build Caches & Dependencies**:
+   - `node_modules/`, `.expo/`, and build artifacts are strictly excluded via `.gitignore`.
+
 ## 📡 API Reference
 
 | Method | Endpoint | Description |
