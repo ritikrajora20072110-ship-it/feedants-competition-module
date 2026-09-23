@@ -25,31 +25,31 @@ A production-grade, highly scalable, and concurrency-safe full-stack feature for
 ```mermaid
 flowchart TD
     subgraph Frontend["React Native / Expo Frontend"]
-        UI[Competition Screen]
-        Lang[i18n Engine (ENG/हिंदी)]
-        Countdown[Live Dynamic Countdown]
-        Modals[Payment / Video / Submission Modals]
-        Switcher[State Switcher & Evaluator Tool]
+        UI["Competition Details Screen"]
+        Lang["i18n Localization Engine (ENG / Hindi)"]
+        Countdown["Live Dynamic Countdown"]
+        Modals["Payment, Video, and Submission Modals"]
+        Switcher["State Switcher & Evaluator Tool"]
     end
 
     subgraph Backend["Node.js + Express API"]
         Router["Express REST Routes (/api)"]
-        Controller["Competition / Review Controllers"]
+        Controller["Competition and Review Controllers"]
         Service["Competition Business Logic Service"]
-        Guard["Atomic Concurrency & Capacity Guard"]
+        Guard["Atomic Concurrency and Capacity Guard"]
     end
 
     subgraph Database["MongoDB Database"]
-        Competitions[(Competitions)]
-        Registrations[(Registrations)]
-        Submissions[(Submissions)]
-        Reviews[(Reviews)]
-        Users[(Users)]
+        Competitions[("Competitions")]
+        Registrations[("Registrations")]
+        Submissions[("Submissions")]
+        Reviews[("Reviews")]
+        Users[("Users")]
     end
 
-    UI -->|1. Fetch Dynamic Details| Router
-    UI -->|2. Register / Pay| Router
-    UI -->|3. Submit Video Entry| Router
+    UI -->|"1. Fetch Dynamic Details"| Router
+    UI -->|"2. Register and Pay"| Router
+    UI -->|"3. Submit Video Entry"| Router
     Router --> Controller --> Service --> Guard --> Database
 ```
 
