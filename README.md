@@ -213,29 +213,6 @@ cp frontend/.env.example frontend/.env
 
 ---
 
-## 📦 What Goes to GitHub vs. Given Differently
-
-To adhere to security best practices and technical submission guidelines:
-
-### ✅ Included in GitHub Repository
-1. **Complete Source Code**:
-   - Backend Express API, Mongoose schemas, atomic concurrency services, and seed scripts.
-   - Frontend React Native / Expo application, custom modular components, and i18n localization dictionaries.
-2. **Configuration Templates**:
-   - `backend/.env.example` & `frontend/.env.example` showing all environment keys and format.
-3. **Automated Test Suites**:
-   - Jest integration tests & concurrency race condition stress tests.
-4. **Documentation**:
-   - Architecture diagrams, API specs, assumptions, and production scalability notes.
-
-### 🔒 Given Differently (Not in GitHub)
-1. **Live Secret `.env` Files**:
-   - Never commit raw `.env` files containing production MongoDB Atlas credentials, database passwords, or private payment gateway secrets (properly excluded via `.gitignore`).
-2. **Screen Recording Demo Video**:
-   - As requested in the assignment submission requirements, the screen recording video is submitted as an external link (Google Drive / Loom / YouTube Unlisted) rather than committing large binary media to git history.
-3. **Local Build Caches & Dependencies**:
-   - `node_modules/`, `.expo/`, and build artifacts are strictly excluded via `.gitignore`.
-
 ## 📡 API Reference
 
 | Method | Endpoint | Description |
