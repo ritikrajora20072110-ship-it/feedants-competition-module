@@ -34,6 +34,7 @@ import { PaymentModal } from '../components/Modals/PaymentModal';
 import { ReviewsModal } from '../components/Modals/ReviewsModal';
 import { StateSwitcherModal } from '../components/Modals/StateSwitcherModal';
 import { ViewSubmissionModal } from '../components/Modals/ViewSubmissionModal';
+import { AdInquiryModal } from '../components/Modals/AdInquiryModal';
 
 import { api } from '../services/api';
 import { translations } from '../constants/translations';
@@ -59,6 +60,7 @@ export const CompetitionDetailsScreen = () => {
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [reviewsModalVisible, setReviewsModalVisible] = useState(false);
   const [stateSwitcherVisible, setStateSwitcherVisible] = useState(false);
+  const [adInquiryVisible, setAdInquiryVisible] = useState(false);
 
   // Toast State
   const [toastMessage, setToastMessage] = useState('');
@@ -378,7 +380,11 @@ export const CompetitionDetailsScreen = () => {
         />
 
         {/* Ad Placeholder Banner */}
-        <AdBanner t={t} />
+        <AdBanner
+          t={t}
+          onOpenAdInquiry={() => setAdInquiryVisible(true)}
+          onShowToast={showToast}
+        />
 
         {/* Spacing for Bottom Fixed Action Bar */}
         <View style={{ height: 20 }} />
@@ -475,6 +481,13 @@ export const CompetitionDetailsScreen = () => {
           loadData();
           showToast('Database reseeded successfully!');
         }}
+      />
+
+      <AdInquiryModal
+        visible={adInquiryVisible}
+        onClose={() => setAdInquiryVisible(false)}
+        onShowToast={showToast}
+        t={t}
       />
     </SafeAreaView>
   );

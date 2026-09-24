@@ -7,6 +7,7 @@ const competitionRoutes = require('./routes/competitionRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const userRoutes = require('./routes/userRoutes');
 const seedRoutes = require('./routes/seedRoutes');
+const adRoutes = require('./routes/adRoutes');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/competitions', competitionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/ads', adRoutes);
 
 // 404 Fallback
 app.use((req, res) => {

@@ -148,4 +148,38 @@ export const api = {
     });
     return res.json();
   },
+
+  /**
+   * Fetch active sponsor advertisements
+   */
+  async getAds() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/ads`);
+      if (!res.ok) throw new Error('Failed to fetch ads');
+      const data = await res.json();
+      return data.data;
+    } catch (err) {
+      console.warn('API getAds error:', err.message);
+      return [];
+    }
+  },
+
+  /**
+   * Submit advertiser/sponsor inquiry
+   */
+  async submitAdInquiry(inquiryData) {
+    const res = await fetch(`${API_BASE_URL}/ads/inquire`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(inquiryData),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to submit inquiry');
+    }
+    return data;
+  },
 };
+
