@@ -172,6 +172,43 @@ class CompetitionController {
       next(err);
     }
   }
+
+  /**
+   * Lightweight live spots endpoint for real-time polling
+   */
+  async getLiveSpots(req, res, next) {
+    try {
+      const { id } = req.params;
+      const data = await competitionService.getLiveSpots(id);
+      res.json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Get submission for specific user
+   */
+  async getMySubmission(req, res, next) {
+    try {
+      const { id } = req.params;
+      let userId = req.query.userId || req.headers['x-user-id'];
+      if (!userId) {
+        const demoUser = await User.findOne();
+        userId = demoUser ? demoUser._id : null;
+      }
+      const data = await competitionService.getMySubmission(id, userId);
+      res.json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new CompetitionController();

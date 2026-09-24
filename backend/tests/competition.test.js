@@ -91,6 +91,63 @@ describe('Feedants Competition API Integration Tests', () => {
     expect(res.body.data.submission.title).toBe('Kathak Tarana Performance');
   });
 
+  it('GET /api/competitions/:id/live-spots - should return fast spot metrics', async () => {
+    const res = await request(app).get(`/api/competitions/${competitionId}/live-spots`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('spotsLeft');
+    expect(res.body.data).toHaveProperty('serverTime');
+    expect(res.body.data).toHaveProperty('lifecycle');
+  });
+
+  it('POST /api/competitions/:id/submit - should reject submission if user is not registered', async () => {
+    const unregisteredUser = await User.create({
+      name: 'Unregistered User',
+      email: `unreg_${Date.now()}@feedants.com`,
+    });
+
+    const res = await request(app)
+      .post(`/api/competitions/${competitionId}/submit`)
+      .send({
+        userId: unregisteredUser._id.toString(),
+        title: 'Unauthorized Entry',
+        mediaUrl: 'https://example.com/video.mp4',
+      });
+
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('POST /api/competitions/:id/submit - should reject invalid media URL format', async () => {
+    const res = await request(app)
+      .post(`/api/competitions/${competitionId}/submit`)
+      .send({
+        userId: testUser._id.toString(),
+        title: 'Bad URL Entry',
+        mediaUrl: 'not-a-valid-url',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('INVALID_URL_FORMAT');
+  });
+
+  it('POST /api/competitions/:id/waitlist - should allow joining waitlist', async () => {
+    const waitlistUser = await User.create({
+      name: 'Waitlist User',
+      email: `waitlist_${Date.now()}@feedants.com`,
+    });
+
+    const res = await request(app)
+      .post(`/api/competitions/${competitionId}/waitlist`)
+      .send({
+        userId: waitlistUser._id.toString(),
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.message).toBe('Successfully joined waitlist');
+  });
+
   it('GET /api/reviews - should return list of reviews', async () => {
     const res = await request(app).get('/api/reviews');
     expect(res.status).toBe(200);

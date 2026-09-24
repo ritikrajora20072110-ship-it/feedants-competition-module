@@ -90,7 +90,30 @@ class CompetitionService {
       };
     }
 
-    // 3. Atomically reserve spot using conditional update
+    // 3. Lifecycle date checks (Ensure registration window is currently active)
+    const compCheck = await Competition.findById(competitionId);
+    if (!compCheck) {
+      const error = new Error('Competition not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const now = new Date();
+    if (compCheck.dates.registrationStart && now < new Date(compCheck.dates.registrationStart)) {
+      const error = new Error('Registration has not opened yet');
+      error.statusCode = 400;
+      error.code = 'REGISTRATION_NOT_STARTED';
+      throw error;
+    }
+
+    if (compCheck.dates.registrationEnd && now > new Date(compCheck.dates.registrationEnd)) {
+      const error = new Error('Registration deadline has passed');
+      error.statusCode = 400;
+      error.code = 'REGISTRATION_CLOSED';
+      throw error;
+    }
+
+    // 4. Atomically reserve spot using conditional update
     // Only increment if currentParticipants < maxParticipants
     const updatedComp = await Competition.findOneAndUpdate(
       {
@@ -105,21 +128,13 @@ class CompetitionService {
     );
 
     if (!updatedComp) {
-      // Check whether competition exists or is actually full
-      const checkComp = await Competition.findById(competitionId);
-      if (!checkComp) {
-        const error = new Error('Competition does not exist');
-        error.statusCode = 404;
-        throw error;
-      }
-
       const error = new Error('Competition is full. No spots remaining.');
       error.statusCode = 409;
       error.code = 'SPOTS_FULL';
       throw error;
     }
 
-    // 4. Create Registration document
+    // 5. Create Registration document
     try {
       const registration = await Registration.create({
         userId,
@@ -149,7 +164,7 @@ class CompetitionService {
   }
 
   /**
-   * Submit participant entry (requires registration)
+   * Submit participant entry (requires registration and active submission window)
    */
   async submitEntry({ competitionId, userId, title, mediaUrl, notes }) {
     // 1. Verify user registration
@@ -157,14 +172,30 @@ class CompetitionService {
     if (!registration) {
       const error = new Error('You must be a paid/confirmed registered participant to upload a submission');
       error.statusCode = 403;
+      error.code = 'NOT_REGISTERED';
       throw error;
     }
 
-    // 2. Check competition exists
+    // 2. Check competition exists and submission window is open
     const competition = await Competition.findById(competitionId);
     if (!competition) {
       const error = new Error('Competition not found');
       error.statusCode = 404;
+      throw error;
+    }
+
+    const now = new Date();
+    if (competition.dates.submissionStart && now < new Date(competition.dates.submissionStart)) {
+      const error = new Error('Submissions have not opened yet');
+      error.statusCode = 400;
+      error.code = 'SUBMISSION_NOT_STARTED';
+      throw error;
+    }
+
+    if (competition.dates.submissionEnd && now > new Date(competition.dates.submissionEnd)) {
+      const error = new Error('Submission window has closed');
+      error.statusCode = 400;
+      error.code = 'SUBMISSION_CLOSED';
       throw error;
     }
 
@@ -285,6 +316,47 @@ class CompetitionService {
       .populate('userId', 'name avatarUrl')
       .sort({ submittedAt: -1 });
     return submissions;
+  }
+
+  /**
+   * Ultra-lightweight endpoint for live spots polling
+   * Ideal for real-time frontend syncing without fetching entire model
+   */
+  async getLiveSpots(competitionId) {
+    let competition;
+    if (competitionId.match(/^[0-9a-fA-F]{24}$/)) {
+      competition = await Competition.findById(competitionId, 'currentParticipants maxParticipants dates waitlist isActive');
+    } else {
+      competition = await Competition.findOne({ slug: competitionId.toLowerCase() }, 'currentParticipants maxParticipants dates waitlist isActive');
+    }
+
+    if (!competition) {
+      const error = new Error('Competition not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const dynamic = competition.calculateDynamicState();
+    return {
+      competitionId: competition._id,
+      spotsLeft: dynamic.spotsLeft,
+      currentParticipants: competition.currentParticipants,
+      maxParticipants: competition.maxParticipants,
+      isFull: dynamic.isFull,
+      waitlistCount: dynamic.waitlistCount,
+      lifecycle: dynamic.lifecycle,
+      countdownLabel: dynamic.countdownLabel,
+      countdownTarget: dynamic.countdownTarget,
+      serverTime: dynamic.serverTime,
+    };
+  }
+
+  /**
+   * Get submission for specific user
+   */
+  async getMySubmission(competitionId, userId) {
+    const submission = await Submission.findOne({ competitionId, userId });
+    return submission;
   }
 }
 
