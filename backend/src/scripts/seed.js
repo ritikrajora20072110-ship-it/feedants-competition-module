@@ -40,13 +40,20 @@ const seedDatabase = async () => {
     console.log('[Seed] Inserting reviews...');
     await Review.insertMany(seedReviews);
 
-    // Create 1 active registration for the classical dance competition to match the design (1 / 20 Booked)
+    // Create 1 active registration for another participant to match design (1 / 20 Booked, 19 spots left)
     const primaryComp = insertedCompetitions[0];
+    const existingParticipant = await User.create({
+      name: 'Pooja Hegde',
+      email: 'pooja.hegde@feedants.com',
+      phone: '+91 98765 11111',
+      avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+    });
+
     await Registration.create({
-      userId: demoUser._id,
+      userId: existingParticipant._id,
       competitionId: primaryComp._id,
       paymentId: 'pay_feedants_init_001',
-      amountPaid: 99,
+      amountPaid: 50,
       status: 'CONFIRMED',
       paymentGateway: 'Razorpay',
     });

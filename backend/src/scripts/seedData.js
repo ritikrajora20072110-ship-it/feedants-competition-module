@@ -7,7 +7,7 @@ const seedCompetitions = [
     tags: ['Dance', 'Multi-Win', 'Winners get certificate'],
     tagsHi: ['नृत्य', 'मल्टी-विन', 'विजेताओं को प्रमाण पत्र'],
     prizePool: 1500,
-    entryFee: 99,
+    entryFee: 50,
     maxParticipants: 20,
     currentParticipants: 1,
     isCertificateProvided: true,

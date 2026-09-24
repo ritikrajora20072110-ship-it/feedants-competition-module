@@ -46,7 +46,7 @@ export const CompetitionDetailsScreen = () => {
 
   // Data states
   const [competition, setCompetition] = useState(null);
-  const [userState, setUserState] = useState({ isRegistered: true, hasSubmitted: false, submission: null });
+  const [userState, setUserState] = useState({ isRegistered: false, hasSubmitted: false, submission: null });
   const [dynamicState, setDynamicState] = useState(null);
   const [allCompetitions, setAllCompetitions] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -94,7 +94,7 @@ export const CompetitionDetailsScreen = () => {
 
       if (compDetails) {
         setCompetition(compDetails.competition);
-        setUserState(compDetails.userState || { isRegistered: true, hasSubmitted: false });
+        setUserState(compDetails.userState || { isRegistered: false, hasSubmitted: false });
         setDynamicState(compDetails.dynamicState);
       }
       setAllCompetitions(compsList || []);
@@ -238,7 +238,7 @@ export const CompetitionDetailsScreen = () => {
     category: 'Dance',
     tags: ['Dance', 'Multi-Win', 'Winners get certificate'],
     prizePool: 1500,
-    entryFee: 99,
+    entryFee: 50,
     maxParticipants: 20,
     currentParticipants: 1,
     judge: {

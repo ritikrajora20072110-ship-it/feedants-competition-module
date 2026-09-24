@@ -7,7 +7,7 @@ export const PaymentModal = ({ visible, competition, onClose, onConfirmPayment, 
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const entryFee = competition?.entryFee || 99;
+  const entryFee = competition?.entryFee || 50;
 
   const handlePay = async () => {
     try {
@@ -33,7 +33,7 @@ export const PaymentModal = ({ visible, competition, onClose, onConfirmPayment, 
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
               <Feather name="shield" size={18} color="#086972" />
-              <Text style={styles.headerTitle}>{t.paymentTitle}</Text>
+              <Text style={styles.headerTitle}>{t?.paymentTitle || 'Feedants Secure Checkout'}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
               <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
@@ -54,16 +54,16 @@ export const PaymentModal = ({ visible, competition, onClose, onConfirmPayment, 
               <Text style={styles.compTitle}>{competition?.title || 'Feedants Competition'}</Text>
               <View style={styles.feeBreakdownRow}>
                 <Text style={styles.breakdownLabel}>Entry Registration Fee</Text>
-                <Text style={styles.breakdownValue}>₹ {entryFee}</Text>
+                <Text style={styles.breakdownValue}>₹ {Number(entryFee).toFixed(2)}</Text>
               </View>
               <View style={styles.feeBreakdownRow}>
                 <Text style={styles.breakdownLabel}>Platform & Processing GST</Text>
-                <Text style={styles.freeBadge}>FREE (₹ 0)</Text>
+                <Text style={styles.freeBadge}>FREE (₹ 0.00)</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.feeBreakdownRow}>
                 <Text style={styles.totalLabel}>Total Payable</Text>
-                <Text style={styles.totalValue}>₹ {entryFee}</Text>
+                <Text style={styles.totalValue}>₹ {Number(entryFee).toFixed(2)}</Text>
               </View>
             </View>
 
